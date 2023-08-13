@@ -31,20 +31,6 @@ def get_spent_cell():
     return 'B' + str(datetime.now().day)
 
 
-def add_cell_value(cell: str, val: str):
-    '''Добавляет значение в ячейку, сохраняя уже имеющееся в ней'''
-    current_val = a.acell(cell).value
-    print(f"{current_val}")
-    if current_val is not None:
-        print("current_val is not None")
-        if current_val.isdigit() and val.isdigit():
-            print("current_val.isdigit() and val.isdigit()")
-            result = int(current_val) + int(val)
-            a.update(cell, result)
-        else: a.update(cell, val+'\n')
-    else: a.update(cell, val+'\n')
-
-
 def new_sheet_create():
     """Создает лист с названием текущего месяца,
         если лист существует, выбирает лист с названием текущего месяца
@@ -68,26 +54,38 @@ def new_sheet_create():
     
     except:
         print("Другая ошибка")
-        print(exception)
+        print(Exception)
 
 
 def add_purchase(*args):
     """Добавляет запись в строку с тратой на момент добавления"""
-    print(args)
     purchase_cell = get_purchase_cell()
     spent_cell = get_spent_cell()
     list_args = list(args)
     for i in list_args:
         if i.isdigit():
-            add_cell_value(spent_cell , i)
-        else: add_cell_value(purchase_cell , i)
+            current_spent_val = a.acell(spent_cell).value
+            if current_spent_val is None:
+                a.update(spent_cell, i)
+            else:
+                result = int(i) + int(current_spent_val)
+                a.update(spent_cell, result)
+        else:
+            current_purchase_val = a.acell(purchase_cell).value
+            if current_purchase_val is not None:
+                a.update(purchase_cell, current_purchase_val + i + '\n')
+            else: a.update(purchase_cell, i+ '\n')
 
 
-def add_income(value: int):
+def add_income(income_value: int):
     """Добавляет запись в ячейку доходов"""
-    curr_value = int(a.acell(income_cell).value)
+    curr_income_value = worksheet.acell(income_cell).value
+    if curr_income_value is None:
+        worksheet.update(income_cell, income_value)
+    else:
+        result = int(curr_income_value) + int(income_value)
+        worksheet.update(income_cell, result)
+
     
 
-
-a = new_sheet_create()  # изменить переменную
-
+new_sheet_create()  # изменить переменную
