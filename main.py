@@ -4,18 +4,21 @@
 и заносит их в таблицу (Excel или Google Sheets, пока не определился)
 """
 
-
 import gspread
 from datetime import datetime
+import telebot
+from telebot import types
 
+token = "6476141297:AAEX-qm0JttdQrv_CcgeBSBFAF3ynqlTKHI"
+bot = telebot.TeleBot(token)
 
 sheet_url = 'https://docs.google.com/spreadsheets/d/\
 1B2OCvHxln1Z8vPXe0Rv0dQQh6cU7KvkPtn_bNsKIKSc/edit#gid=0'  # Тестовая таблица
-sheet_page = str(datetime.now().strftime('%B'))      # получаем название месяца
+sheet_page = str(datetime.now().strftime('%B'))  # получаем название месяца
 
-spent_sum_cell = 'B33'          # в эту ячейку записываем сумму потраченную за месяц
-income_cell = 'B36'             # ячейка для записи общего дохода за месяц
-curr_month_cell = sheet_page         # в эту ячейку записываем текущий месяц
+spent_sum_cell = 'B33'  # в эту ячейку записываем сумму потраченную за месяц
+income_cell = 'B36'  # ячейка для записи общего дохода за месяц
+curr_month_cell = sheet_page  # в эту ячейку записываем текущий месяц
 
 gc = gspread.service_account(filename='gs_credentials.json')
 sh = gc.open_by_url(sheet_url)
@@ -45,47 +48,65 @@ def new_sheet_create():
         print('Лист создан')
         print(worksheet)
         return worksheet
-    
+
     except gspread.exceptions.APIError:
         print("Лист не создан, такой лист уже существует")
         worksheet = sh.worksheet(sheet_page)  # если лист существует то выбираем его для работы
         print("Выбираем - " + sheet_page)
         return worksheet
-    
+
     except:
-        print("Другая ошибка")
+        print("Другая ошибка---------------------------------------------")
         print(Exception)
+        print("Другая ошибка---------------------------------------------")
 
 
-def add_purchase(*args):
+def add_purchase(string: str):
     """Добавляет запись в строку с тратой на момент добавления"""
     purchase_cell = get_purchase_cell()
     spent_cell = get_spent_cell()
-    list_args = list(args)
-    for i in list_args:
+    print(string)
+    list_string = string.split()
+    print(list_string)
+    for i in list_string:
         if i.isdigit():
-            current_spent_val = a.acell(spent_cell).value
+            current_spent_val = sheet.acell(spent_cell).value
             if current_spent_val is None:
-                a.update(spent_cell, i)
+                sheet.update(spent_cell, i)
             else:
                 result = int(i) + int(current_spent_val)
-                a.update(spent_cell, result)
+                sheet.update(spent_cell, result)
         else:
-            current_purchase_val = a.acell(purchase_cell).value
+            current_purchase_val = sheet.acell(purchase_cell).value
             if current_purchase_val is not None:
-                a.update(purchase_cell, current_purchase_val + i + '\n')
-            else: a.update(purchase_cell, i+ '\n')
+                sheet.update(purchase_cell, current_purchase_val + i + '\n')
+            else:
+                sheet.update(purchase_cell, i + '\n')
 
 
 def add_income(income_value: int):
     """Добавляет запись в ячейку доходов"""
-    curr_income_value = worksheet.acell(income_cell).value
+    curr_income_value = sheet.acell(income_cell).value
     if curr_income_value is None:
-        worksheet.update(income_cell, income_value)
+        sheet.update(income_cell, income_value)
     else:
         result = int(curr_income_value) + int(income_value)
-        worksheet.update(income_cell, result)
+        sheet.update(income_cell, result)
 
-    
 
-new_sheet_create()  # изменить переменную
+@bot.message_handler(commands=["help"])
+def start(message):
+    send_start_message = f"Привет {message.from_user.first_name}. Вот список доступных команд:"
+    bot.send_message(message.chat.id, send_start_message)
+
+
+@bot.message_handler()
+def adding_spending(message):
+    add_purchase(message.text)
+    print(message)
+    bot.send_message(message.chat.id, "Добавлено")
+
+
+sheet = new_sheet_create()
+
+bot.infinity_polling()
