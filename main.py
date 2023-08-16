@@ -17,7 +17,7 @@ sheet_url = 'https://docs.google.com/spreadsheets/d/\
 sheet_page = str(datetime.now().strftime('%B'))  # получаем название месяца
 
 spent_sum_cell = 'B33'  # в эту ячейку записываем сумму потраченную за месяц
-income_cell = 'B36'  # ячейка для записи общего дохода за месяц
+income_cell = 'B35'  # ячейка для записи общего дохода за месяц
 curr_month_cell = sheet_page  # в эту ячейку записываем текущий месяц
 
 gc = gspread.service_account(filename='gs_credentials.json')
@@ -51,7 +51,7 @@ def new_sheet_create():
 
     except gspread.exceptions.APIError:
         print("Лист не создан, такой лист уже существует")
-        worksheet = sh.worksheet(sheet_page)  # если лист существует то выбираем его для работы
+        worksheet = sh.worksheet(sheet_page)  # если лист существует, то выбираем его для работы
         print("Выбираем - " + sheet_page)
         return worksheet
 
@@ -95,16 +95,51 @@ def add_income(income_value: int):
 
 
 @bot.message_handler(commands=["help"])
+def help_msg(message):
+    send_help_message = "Вот список доступных команд:"
+    bot.send_message(message.chat.id, send_help_message)
+
+
+@bot.message_handler(commands=["start"])
 def start(message):
-    send_start_message = f"Привет {message.from_user.first_name}. Вот список доступных команд:"
-    bot.send_message(message.chat.id, send_start_message)
+    markup = types.ReplyKeyboardMarkup()
+    income_btn = types.KeyboardButton("Записать доход")
+    spending_btn = types.KeyboardButton("Записать траты")
+    markup.row(income_btn, spending_btn)
+    send_start_message = f"Привет {message.from_user.first_name}. Выбери одно из действий:"
+    bot.send_message(message.chat.id, send_start_message, reply_markup=markup)
+    if message.text == "Записать доход":
+        bot.register_next_step_handler(message, adding_income)
+    elif message.text == "Записать траты":
+        bot.register_next_step_handler(message, adding_spending)
 
 
 @bot.message_handler()
 def adding_spending(message):
-    add_purchase(message.text)
-    print(message)
-    bot.send_message(message.chat.id, "Добавлено")
+    print("записать траты")
+    markup = types.ReplyKeyboardMarkup()
+    back_btn = types.KeyboardButton("Назад")
+    markup.row(back_btn)
+    if message.text == "Записать траты":
+        bot.send_message(message.chat.id, "Слушаю...", reply_markup=markup)
+    elif message.text == "Назад":
+        print('Назад')
+        bot.register_next_step_handler(message, start)
+    else:
+        add_purchase(message.text)
+        bot.send_message(message.chat.id, "Добавлено", reply_markup=markup)
+
+
+@bot.message_handler()
+def adding_income(message):
+    markup = types.ReplyKeyboardMarkup()
+    back_btn = types.KeyboardButton("Назад")
+    markup.row(back_btn)
+    if message.text.isdigit():
+        add_income(message.text)
+        bot.send_message(message.chat.id, "Добавлено", reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, "Введи число", reply_markup=markup)
 
 
 sheet = new_sheet_create()
