@@ -108,38 +108,32 @@ def start(message):
     markup.row(income_btn, spending_btn)
     send_start_message = f"Привет {message.from_user.first_name}. Выбери одно из действий:"
     bot.send_message(message.chat.id, send_start_message, reply_markup=markup)
+
+
+@bot.message_handler()
+def doing(message):
     if message.text == "Записать доход":
         bot.register_next_step_handler(message, adding_income)
+        bot.send_message(message.chat.id, "Записываю...")
     elif message.text == "Записать траты":
         bot.register_next_step_handler(message, adding_spending)
+        bot.send_message(message.chat.id, "Слушаю...")
+    else:
+        print("Ниче не понял щас...")
 
 
-@bot.message_handler()
 def adding_spending(message):
     print("записать траты")
-    markup = types.ReplyKeyboardMarkup()
-    back_btn = types.KeyboardButton("Назад")
-    markup.row(back_btn)
-    if message.text == "Записать траты":
-        bot.send_message(message.chat.id, "Слушаю...", reply_markup=markup)
-    elif message.text == "Назад":
-        print('Назад')
-        bot.register_next_step_handler(message, start)
-    else:
-        add_purchase(message.text)
-        bot.send_message(message.chat.id, "Добавлено", reply_markup=markup)
+    add_purchase(message.text)
+    bot.send_message(message.chat.id, "Добавлено")
 
 
-@bot.message_handler()
 def adding_income(message):
-    markup = types.ReplyKeyboardMarkup()
-    back_btn = types.KeyboardButton("Назад")
-    markup.row(back_btn)
     if message.text.isdigit():
         add_income(message.text)
-        bot.send_message(message.chat.id, "Добавлено", reply_markup=markup)
+        bot.send_message(message.chat.id, "Добавлено")
     else:
-        bot.send_message(message.chat.id, "Введи число", reply_markup=markup)
+        bot.send_message(message.chat.id, "Введи число")
 
 
 sheet = new_sheet_create()
