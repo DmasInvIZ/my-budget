@@ -119,7 +119,7 @@ def doing(message):
         bot.register_next_step_handler(message, adding_spending)
         bot.send_message(message.chat.id, "Слушаю...")
     else:
-        print("Ниче не понял щас...")
+        bot.send_message(message.chat.id, "Ниче не понял щас...")
 
 
 def adding_spending(message):
