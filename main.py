@@ -4,10 +4,13 @@
 и заносит их в таблицу (Excel или Google Sheets, пока не определился)
 """
 
+import logging
 import gspread
 from datetime import datetime
 import telebot
 from telebot import types
+
+logging.basicConfig(level=logging.DEBUG, filename="py_log.log", filemode="w")
 
 token = "6476141297:AAEX-qm0JttdQrv_CcgeBSBFAF3ynqlTKHI"
 bot = telebot.TeleBot(token)
@@ -36,26 +39,30 @@ def get_spent_cell():
 
 def new_sheet_create():
     """Создает лист с названием текущего месяца,
-        если лист существует, выбирает лист с названием текущего месяца
-        (в случае перезапуска скрита)"""
+        если лист существует, выбирает лист с названием текущего месяца"""
     try:
+        logging.debug("Пробуем создать лист")
         worksheet = sh.add_worksheet(title=sheet_page, rows=40, cols=2)
         worksheet.update('A33', 'Покупка')
         worksheet.update('B33', 'Сумма')
         worksheet.update('A34', 'Всего потрачено:')
-        worksheet.update('B34', "=СУММ(B1:B31)")
+        worksheet.update('B34', '=СУММ(B1:B31)')
         worksheet.update('A35', 'Всего заработано:')
+        logging.debug("Лист создан")
         print('Лист создан')
         print(worksheet)
         return worksheet
 
     except gspread.exceptions.APIError:
+        logging.debug("Лист уже существует")
         print("Лист не создан, такой лист уже существует")
         worksheet = sh.worksheet(sheet_page)  # если лист существует, то выбираем его для работы
+        logging.debug(f"Выбран лист - {sheet_page}")
         print("Выбираем - " + sheet_page)
         return worksheet
 
     except:
+        logging.debug("Ошибка", Exception)
         print("Другая ошибка---------------------------------------------")
         print(Exception)
         print("Другая ошибка---------------------------------------------")
@@ -63,6 +70,7 @@ def new_sheet_create():
 
 def add_purchase(string: str):
     """Добавляет запись в строку с тратой на момент добавления"""
+    sheet = new_sheet_create()
     purchase_cell = get_purchase_cell()
     spent_cell = get_spent_cell()
     print(string)
@@ -72,7 +80,7 @@ def add_purchase(string: str):
         if i.isdigit():
             current_spent_val = sheet.acell(spent_cell).value
             if current_spent_val is None:
-                sheet.update(spent_cell, i)
+                sheet.update(spent_cell, int(i))
             else:
                 result = int(i) + int(current_spent_val)
                 sheet.update(spent_cell, result)
@@ -86,6 +94,7 @@ def add_purchase(string: str):
 
 def add_income(income_value: int):
     """Добавляет запись в ячейку доходов"""
+    sheet = new_sheet_create()
     curr_income_value = sheet.acell(income_cell).value
     if curr_income_value is None:
         sheet.update(income_cell, income_value)
@@ -126,16 +135,21 @@ def adding_spending(message):
     print("записать траты")
     add_purchase(message.text)
     bot.send_message(message.chat.id, "Добавлено")
+    print("Добавлено " + message.text)
+    logging.debug("Добавлено " + message.text)
 
 
 def adding_income(message):
+    print("записать доход")
     if message.text.isdigit():
         add_income(message.text)
-        bot.send_message(message.chat.id, "Добавлено")
+        bot.send_message(message.chat.id, f"Добавлено {message.text}")
+        print("Доход - " + message.text)
+        logging.debug("Доход - " + message.text)
     else:
         bot.send_message(message.chat.id, "Введи число")
 
 
-sheet = new_sheet_create()
-
+# sheet = new_sheet_create()
+print("Started..")
 bot.infinity_polling()
