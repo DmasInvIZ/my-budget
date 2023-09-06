@@ -16,12 +16,12 @@ token = "6476141297:AAEX-qm0JttdQrv_CcgeBSBFAF3ynqlTKHI"
 bot = telebot.TeleBot(token)
 
 sheet_url = 'https://docs.google.com/spreadsheets/d/\
-1B2OCvHxln1Z8vPXe0Rv0dQQh6cU7KvkPtn_bNsKIKSc/edit#gid=0'  # Тестовая таблица
-sheet_page = str(datetime.now().strftime('%B'))  # получаем название месяца
+1B2OCvHxln1Z8vPXe0Rv0dQQh6cU7KvkPtn_bNsKIKSc/edit#gid=0'    # Тестовая таблица
+sheet_page = str(datetime.now().strftime('%B'))             # получаем название месяца
 
-spent_sum_cell = 'B33'  # в эту ячейку записываем сумму потраченную за месяц
-income_cell = 'B35'  # ячейка для записи общего дохода за месяц
-curr_month_cell = sheet_page  # в эту ячейку записываем текущий месяц
+spent_sum_cell = 'B33'                                      # в эту ячейку записываем сумму потраченную за месяц
+income_cell = 'B35'                                         # ячейка для записи общего дохода за месяц
+curr_month_cell = sheet_page                                # в эту ячейку записываем текущий месяц
 
 gc = gspread.service_account(filename='gs_credentials.json')
 sh = gc.open_by_url(sheet_url)
@@ -43,10 +43,12 @@ def new_sheet_create():
     try:
         logging.debug("Пробуем создать лист")
         worksheet = sh.add_worksheet(title=sheet_page, rows=40, cols=2)
+        worksheet.format('A33:B33', {'textFormat': {'bold': True}})
         worksheet.update('A33', 'Покупка')
         worksheet.update('B33', 'Сумма')
         worksheet.update('A34', 'Всего потрачено:')
         worksheet.update('B34', '=СУММ(B1:B31)')
+        worksheet.update('B35', 0)
         worksheet.update('A35', 'Всего заработано:')
         logging.debug("Лист создан")
         print('Лист создан')
@@ -56,7 +58,7 @@ def new_sheet_create():
     except gspread.exceptions.APIError:
         logging.debug("Лист уже существует")
         print("Лист не создан, такой лист уже существует")
-        worksheet = sh.worksheet(sheet_page)  # если лист существует, то выбираем его для работы
+        worksheet = sh.worksheet(sheet_page)                        # если лист существует, то выбираем его для работы
         logging.debug(f"Выбран лист - {sheet_page}")
         print("Выбираем - " + sheet_page)
         return worksheet
@@ -150,6 +152,5 @@ def adding_income(message):
         bot.send_message(message.chat.id, "Введи число")
 
 
-# sheet = new_sheet_create()
 print("Started..")
 bot.infinity_polling()
