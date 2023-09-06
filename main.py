@@ -113,10 +113,10 @@ def help_msg(message):
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    markup = types.ReplyKeyboardMarkup()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     income_btn = types.KeyboardButton("Записать доход")
     spending_btn = types.KeyboardButton("Записать траты")
-    markup.row(income_btn, spending_btn)
+    markup.add(income_btn, spending_btn)
     send_start_message = f"Привет {message.from_user.first_name}. Выбери одно из действий:"
     bot.send_message(message.chat.id, send_start_message, reply_markup=markup)
 
