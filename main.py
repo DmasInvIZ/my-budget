@@ -9,10 +9,10 @@ import gspread
 from datetime import datetime
 import telebot
 from telebot import types
+from token_file import token
 
 logging.basicConfig(level=logging.DEBUG, filename="py_log.log", filemode="w")
 
-token = "6476141297:AAEX-qm0JttdQrv_CcgeBSBFAF3ynqlTKHI"
 bot = telebot.TeleBot(token)
 
 sheet_url = 'https://docs.google.com/spreadsheets/d/\
@@ -124,11 +124,11 @@ def start(message):
 @bot.message_handler()
 def doing(message):
     if message.text == "Записать доход":
-        bot.register_next_step_handler(message, adding_income)
         bot.send_message(message.chat.id, "Записываю...")
+        bot.register_next_step_handler(message, adding_income)
     elif message.text == "Записать траты":
-        bot.register_next_step_handler(message, adding_spending)
         bot.send_message(message.chat.id, "Слушаю...")
+        bot.register_next_step_handler(message, adding_spending)
     else:
         bot.send_message(message.chat.id, "Ниче не понял щас...")
 
