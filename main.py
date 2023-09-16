@@ -16,12 +16,12 @@ logging.basicConfig(level=logging.DEBUG, filename="py_log.log", filemode="w")
 bot = telebot.TeleBot(token)
 
 sheet_url = 'https://docs.google.com/spreadsheets/d/\
-1B2OCvHxln1Z8vPXe0Rv0dQQh6cU7KvkPtn_bNsKIKSc/edit#gid=0'    # Тестовая таблица
-sheet_page = str(datetime.now().strftime('%B'))             # получаем название месяца
+1B2OCvHxln1Z8vPXe0Rv0dQQh6cU7KvkPtn_bNsKIKSc/edit#gid=0'  # Тестовая таблица
+sheet_page = str(datetime.now().strftime('%B'))  # получаем название месяца
 
-spent_sum_cell = 'B33'                                      # в эту ячейку записываем сумму потраченную за месяц
-income_cell = 'B35'                                         # ячейка для записи общего дохода за месяц
-curr_month_cell = sheet_page                                # в эту ячейку записываем текущий месяц
+spent_sum_cell = 'B33'  # в эту ячейку записываем сумму потраченную за месяц
+income_cell = 'B35'  # ячейка для записи общего дохода за месяц
+curr_month_cell = sheet_page  # в эту ячейку записываем текущий месяц
 
 gc = gspread.service_account(filename='gs_credentials.json')
 sh = gc.open_by_url(sheet_url)
@@ -58,7 +58,7 @@ def new_sheet_create():
     except gspread.exceptions.APIError:
         logging.debug("Лист уже существует")
         print("Лист не создан, такой лист уже существует")
-        worksheet = sh.worksheet(sheet_page)                        # если лист существует, то выбираем его для работы
+        worksheet = sh.worksheet(sheet_page)                          # если лист существует, то выбираем его для работы
         logging.debug(f"Выбран лист - {sheet_page}")
         print("Выбираем - " + sheet_page)
         return worksheet
@@ -76,22 +76,20 @@ def add_purchase(string: str):
     purchase_cell = get_purchase_cell()
     spent_cell = get_spent_cell()
     print(string)
-    list_string = string.split()
-    print(list_string)
-    for i in list_string:
-        if i.isdigit():
+    for el in string.split():
+        if el.isdigit():
             current_spent_val = sheet.acell(spent_cell).value
             if current_spent_val is None:
-                sheet.update(spent_cell, int(i))
+                sheet.update(spent_cell, int(el))
             else:
-                result = int(i) + int(current_spent_val)
+                result = int(el) + int(current_spent_val)
                 sheet.update(spent_cell, result)
         else:
             current_purchase_val = sheet.acell(purchase_cell).value
             if current_purchase_val is not None:
-                sheet.update(purchase_cell, current_purchase_val + i + '\n')
+                sheet.update(purchase_cell, current_purchase_val + el + '\n')
             else:
-                sheet.update(purchase_cell, i + '\n')
+                sheet.update(purchase_cell, el + '\n')
 
 
 def add_income(income_value: int):
@@ -107,30 +105,39 @@ def add_income(income_value: int):
 
 @bot.message_handler(commands=["help"])
 def help_msg(message):
-    send_help_message = "Вот список доступных команд:"
-    bot.send_message(message.chat.id, send_help_message)
+    if message.chat.id != 2127625714:
+        bot.send_message(message.chat.id, "У вас нет доступа")
+    else:
+        send_help_message = "Вот список доступных команд:"
+        bot.send_message(message.chat.id, send_help_message)
 
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    income_btn = types.KeyboardButton("Записать доход")
-    spending_btn = types.KeyboardButton("Записать траты")
-    markup.add(income_btn, spending_btn)
-    send_start_message = f"Привет {message.from_user.first_name}. Выбери одно из действий:"
-    bot.send_message(message.chat.id, send_start_message, reply_markup=markup)
+    if message.chat.id != 2127625714:
+        bot.send_message(message.chat.id, "У вас нет доступа")
+    else:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        income_btn = types.KeyboardButton("Записать доход")
+        spending_btn = types.KeyboardButton("Записать траты")
+        markup.add(income_btn, spending_btn)
+        send_start_message = f"Привет {message.from_user.first_name}. Выбери одно из действий:"
+        bot.send_message(message.chat.id, send_start_message, reply_markup=markup)
 
 
 @bot.message_handler()
 def doing(message):
-    if message.text == "Записать доход":
-        bot.send_message(message.chat.id, "Записываю...")
-        bot.register_next_step_handler(message, adding_income)
-    elif message.text == "Записать траты":
-        bot.send_message(message.chat.id, "Слушаю...")
-        bot.register_next_step_handler(message, adding_spending)
+    if message.chat.id != 2127625714:
+        bot.send_message(message.chat.id, "У вас нет доступа")
     else:
-        bot.send_message(message.chat.id, "Ниче не понял щас...")
+        if message.text == "Записать доход":
+            bot.send_message(message.chat.id, "Записываю...")
+            bot.register_next_step_handler(message, adding_income)
+        elif message.text == "Записать траты":
+            bot.send_message(message.chat.id, "Слушаю...")
+            bot.register_next_step_handler(message, adding_spending)
+        else:
+            bot.send_message(message.chat.id, "Ниче не понял щас...")
 
 
 def adding_spending(message):
