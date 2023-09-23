@@ -88,7 +88,6 @@ def add_purchase(value_list: list):
     purchase_cell = get_purchase_cell()
     spent_cell = get_spent_cell()
     for item in value_list:
-        print(item)
         if item.isdigit():
             current_spent_val = sheet.acell(spent_cell).value
             if current_spent_val is None:
@@ -156,8 +155,8 @@ def adding_spending(message):
     val = get_list(message.text)
     add_purchase(val)
     bot.send_message(message.chat.id, "Добавлено")
-    # print("Добавлено " + message.text)
-    # logging.debug("Добавлено " + message.text)
+    print("Добавлено " + message.text)
+    logging.debug("Добавлено " + message.text)
 
 
 def adding_income(message):
