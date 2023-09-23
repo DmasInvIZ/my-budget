@@ -70,26 +70,38 @@ def new_sheet_create():
         print("Другая ошибка---------------------------------------------")
 
 
-def add_purchase(string: str):
-    """Добавляет запись в строку с тратой на момент добавления"""
+def get_list(strings: str):
+    string_arr = []
+    digit_arr = []
+    for el in strings.split(","):                   # разбиваем строку по разделителю - запятая
+        digit = el.split()[-1]                      # достаем число из строки
+        digit_arr.append(digit)                     # добавляем число в список
+        string_old = el.split()                     # разбиваем на элементы
+        string_old.pop(-1)                          # удаляем последний элемент - число
+        string_arr.append(" ".join(string_old))     # собираем строку обратно и добавляем строку в список
+    return string_arr + digit_arr
+
+
+def add_purchase(value_list: list):
+    """Добавляет запись в строку с тратой"""
     sheet = new_sheet_create()
     purchase_cell = get_purchase_cell()
     spent_cell = get_spent_cell()
-    print(string)
-    for el in string.split():
-        if el.isdigit():
+    for item in value_list:
+        print(item)
+        if item.isdigit():
             current_spent_val = sheet.acell(spent_cell).value
             if current_spent_val is None:
-                sheet.update(spent_cell, int(el))
+                sheet.update(spent_cell, int(item))
             else:
-                result = int(el) + int(current_spent_val)
+                result = int(item) + int(current_spent_val)
                 sheet.update(spent_cell, result)
         else:
             current_purchase_val = sheet.acell(purchase_cell).value
             if current_purchase_val is not None:
-                sheet.update(purchase_cell, current_purchase_val + el + '\n')
+                sheet.update(purchase_cell, current_purchase_val + item + '\n')
             else:
-                sheet.update(purchase_cell, el + '\n')
+                sheet.update(purchase_cell, item + '\n')
 
 
 def add_income(income_value: int):
@@ -141,11 +153,11 @@ def doing(message):
 
 
 def adding_spending(message):
-    print("записать траты")
-    add_purchase(message.text)
+    val = get_list(message.text)
+    add_purchase(val)
     bot.send_message(message.chat.id, "Добавлено")
-    print("Добавлено " + message.text)
-    logging.debug("Добавлено " + message.text)
+    # print("Добавлено " + message.text)
+    # logging.debug("Добавлено " + message.text)
 
 
 def adding_income(message):
