@@ -5,6 +5,8 @@
 """
 
 import logging
+import time
+
 import gspread
 from datetime import datetime
 import telebot
@@ -52,7 +54,6 @@ def new_sheet_create():
         worksheet.update('A35', 'Всего заработано:')
         logging.debug("Лист создан")
         print('Лист создан')
-        print(worksheet)
         return worksheet
 
     except gspread.exceptions.APIError:
@@ -63,10 +64,10 @@ def new_sheet_create():
         print("Выбираем - " + sheet_page)
         return worksheet
 
-    except:
+    except Exception as e:
         logging.debug("Ошибка", Exception)
         print("Другая ошибка---------------------------------------------")
-        print(Exception)
+        print(e)
         print("Другая ошибка---------------------------------------------")
 
 
@@ -114,6 +115,25 @@ def add_income(income_value: int):
         sheet.update(income_cell, result)
 
 
+def adding_spending(message):
+    val = get_list(message.text)
+    add_purchase(val)
+    bot.send_message(message.chat.id, "Добавлено")
+    print("Добавлено " + message.text)
+    logging.debug("Добавлено " + message.text)
+
+
+def adding_income(message):
+    print("записать доход")
+    if message.text.isdigit():
+        add_income(message.text)
+        bot.send_message(message.chat.id, f"Добавлено {message.text}")
+        print("Доход - " + message.text)
+        logging.debug("Доход - " + message.text)
+    else:
+        bot.send_message(message.chat.id, "Введи число")
+
+
 @bot.message_handler(commands=["help"])
 def help_msg(message):
     if message.chat.id != 2127625714:
@@ -151,24 +171,11 @@ def doing(message):
             bot.send_message(message.chat.id, "Ниче не понял щас...")
 
 
-def adding_spending(message):
-    val = get_list(message.text)
-    add_purchase(val)
-    bot.send_message(message.chat.id, "Добавлено")
-    print("Добавлено " + message.text)
-    logging.debug("Добавлено " + message.text)
-
-
-def adding_income(message):
-    print("записать доход")
-    if message.text.isdigit():
-        add_income(message.text)
-        bot.send_message(message.chat.id, f"Добавлено {message.text}")
-        print("Доход - " + message.text)
-        logging.debug("Доход - " + message.text)
-    else:
-        bot.send_message(message.chat.id, "Введи число")
-
-
-print("Started..")
-bot.infinity_polling()
+if __name__ == "__main__":
+    print("Started..")
+    try:
+        bot.infinity_polling()
+    except Exception:
+        time.sleep(10)
+        print("Started..")
+        bot.infinity_polling()
